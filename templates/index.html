@@ -15,7 +15,7 @@
     <input id="end" class="controls" type="text" placeholder="{{ endpt }}">
     </div>
     <div id="map"></div>
-    <script>
+    <script> 
       function initMap() {
         var directionsService = new google.maps.DirectionsService;
         var directionsDisplay = new google.maps.DirectionsRenderer({
@@ -112,7 +112,7 @@
           } else {
             orig = '{{ startpt }}';
           }
-          
+
           var dest = searchBoxTo.getPlaces();
           dest = dest[0].formatted_address;
           calculateRoute(directionsService, directionsDisplay, orig, dest);
@@ -222,11 +222,11 @@
 
             var rt = {
                 "key": i,
-                "value": pts 
+                "value": pts
               };
             rts.push(rt);
           };
-          
+
         };
 
         field.attr("name", "route");
@@ -242,7 +242,7 @@
       }
 
     </script>
-    
+
 
     <script async defer
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDfCLgFsurkleGzFqr8hKWko6_FQj4938Q&libraries=places&callback=initMap">
