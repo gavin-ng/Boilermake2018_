@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>PathLight</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles/template.css') }}">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  </head>
+  <body>
+    <div id="floating-panel">
+    <b>Start: </b>
+    <input id="start" class="controls" type="text" placeholder="{{ startpt }}">
+    <b>End: </b>
+    <input id="end" class="controls" type="text" placeholder="{{ endpt }}">
+    </div>
+    <div id="map"></div>
+    <script>
+      function initMap() {
+        var directionsService = new google.maps.DirectionsService;
+        var directionsDisplay = new google.maps.DirectionsRenderer({
+            polylineOptions: {
+              strokeColor: "white"
+            }
+          });
+        var map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 16,
+          center: {lat: 40.1019564, lng: -88.2293502},
+          styles: [
+            {elementType: 'geometry', stylers: [{color: '#242f3e'}]},
+            {elementType: 'labels.text.stroke', stylers: [{color: '#242f3e'}]},
+            {elementType: 'labels.text.fill', stylers: [{color: '#746855'}]},
+            {
+              featureType: 'road',
+              elementType: 'geometry',
+              stylers: [{color: '#38414e'}]
+            },
+            {
+              featureType: 'road',
+              elementType: 'geometry.stroke',
+              stylers: [{color: '#212a37'}]
+            },
+            {
+              featureType: 'road',
+              elementType: 'labels.text.fill',
+              stylers: [{color: '#9ca5b3'}]
+            },
+            {
+              featureType: 'road.highway',
+              elementType: 'geometry',
+              stylers: [{color: '#746855'}]
+            },
+            {
+              featureType: 'road.highway',
+              elementType: 'geometry.stroke',
+              stylers: [{color: '#1f2835'}]
+            },
+            {
+              featureType: 'road.highway',
+              elementType: 'labels.text.fill',
+              stylers: [{color: '#f3d19c'}]
+            },
+            {
+              featureType: 'transit',
+              elementType: 'geometry',
+              stylers: [{color: '#2f3948'}]
+            },
+            {
+              featureType: 'transit.station',
+              elementType: 'labels.text.fill',
+              stylers: [{color: '#d59563'}]
+            },
+            {
+              featureType: 'water',
+              elementType: 'geometry',
+              stylers: [{color: '#17263c'}]
+            },
+            {
+              featureType: 'water',
+              elementType: 'labels.text.fill',
+              stylers: [{color: '#515c6d'}]
+            },
+            {
+              featureType: 'water',
+              elementType: 'labels.text.stroke',
+              stylers: [{color: '#17263c'}]
+            }
+          ]
+        });
+        directionsDisplay.setMap(map);
+
+        // Create the FROM search box and link it to the UI element.
+        var inputFrom = document.getElementById('start');
+        var searchBoxFrom = new google.maps.places.SearchBox(inputFrom);
+        map.addListener('bounds_changed', function() {
+          searchBoxFrom.setBounds(map.getBounds());
+        });
+
+        // Create the TO search box and link it to the UI element.
+        var inputTo = document.getElementById('end');
+        var searchBoxTo = new google.maps.places.SearchBox(inputTo);
+
+        // There is an ongoing search and a best route
+        if({{ bestIndex }} != -1) {
+          displayRoute(directionsService, directionsDisplay);
+        }
+
+        searchBoxTo.addListener('places_changed', function() {
+          var orig = searchBoxFrom.getPlaces();
+          if(orig){
+            orig = orig[0].formatted_address;
+          } else {
+            orig = '{{ startpt }}';
+          }
+          
+          var dest = searchBoxTo.getPlaces();
+          dest = dest[0].formatted_address;
+          calculateRoute(directionsService, directionsDisplay, orig, dest);
+        });
+      }
+
+      function displayRoute(directionsService, directionsDisplay) {
+        directionsService.route({
+          origin: '{{ startpt }}',
+          destination: '{{ endpt }}',
+          travelMode: 'WALKING',
+          provideRouteAlternatives: true
+        }, function(response, status) {
+          if (status === 'OK') {
+            directionsDisplay.setDirections(response);
+            directionsDisplay.setRouteIndex({{ bestIndex }});
+          } else {
+            window.alert('Directions request failed due to ' + status + '{{ bestIndex }} + {{ startpt }} + {{ endpt }}');
+          }
+        });
+      }
+
+      function calculateRoute(directionsService, directionsDisplay, orig, dest) {
+        routes = [];
+
+        directionsService.route({
+          origin: orig,
+          destination: dest,
+          travelMode: 'WALKING',
+          provideRouteAlternatives: true
+        }, function(response, status) {
+          if (status === 'OK') {
+            response.routes.forEach(function(route) {
+              routes.push(route);
+            });
+          } else {
+            window.alert('Directions request failed due to ' + status);
+            console.log(document.getElementById('start').value);
+            console.log(document.getElementById('end').value);
+            return;
+          }
+        });
+
+        directionsService.route({
+          origin: orig,
+          destination: dest,
+          travelMode: 'TRANSIT',
+          provideRouteAlternatives: true
+        }, function(response, status) {
+          if (status === 'OK') {
+            response.routes.forEach(function(route) {
+              routes.push(route);
+            });
+          } else {
+            window.alert('Directions request failed due to ' + status);
+            console.log(document.getElementById('start').value);
+            console.log(document.getElementById('end').value);
+            return;
+          }
+        });
+
+        directionsService.route({
+          origin: orig,
+          destination: dest,
+          travelMode: 'DRIVING',
+          provideRouteAlternatives: true
+        }, function(response, status) {
+          if (status === 'OK') {
+            response.routes.forEach(function(route) {
+              routes.push(route);
+            });
+            searchBestRoute(routes);
+          } else {
+            window.alert('Directions request failed due to ' + status);
+            console.log(document.getElementById('start').value);
+            console.log(document.getElementById('end').value);
+            return;
+          }
+        });
+      }
+
+      // Return the index number of route to use
+      function searchBestRoute(routes) {
+        var form = $('<form></form>');
+
+        form.attr("method", "post");
+        form.attr("action", "/bestroute");
+
+        var field = $('<input></input>');
+        var rts = [];
+
+        rts.push({
+          "start": document.getElementById('start').value,
+          "end": document.getElementById('end').value
+        });
+
+        for (var i = routes.length; i >= 0; i--) {
+          if(routes[i]) {
+            var pts = new Array(routes[i].overview_path.length);
+
+            for (var j = routes[i].overview_path.length - 1; j >= 0; j--) {
+              var pt = [];
+              pt.push(routes[i].overview_path[j].lat());
+              pt.push(routes[i].overview_path[j].lng());
+              pts[j] = pt;
+            };
+
+            var rt = {
+                "key": i,
+                "value": pts 
+              };
+            rts.push(rt);
+          };
+          
+        };
+
+        field.attr("name", "route");
+        field.attr("value", JSON.stringify(rts));
+        form.append(field);
+
+        // The form needs to be a part of the document in
+        // order for us to be able to submit it.
+        $(document.body).append(form);
+        form.submit();
+
+        return 0
+      }
+
+    </script>
+    
+
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDfCLgFsurkleGzFqr8hKWko6_FQj4938Q&libraries=places&callback=initMap">
+    </script>
+  </body>
+</html>
