@@ -22,7 +22,10 @@ crime_data_raw = json.load(urllib2.urlopen(crime_url))
 
 today = int(datetime.date.today().strftime("%Y%m%d"))
 
+# remove NaNs and nas
 crime_data = pd.DataFrame(crime_data_raw)
+crime_data = crime_data.replace(np.NaN, np.nan).dropna(axis=0)
+
 
 # clean up the date format
 # this returns YYYYMM (no DAY info in data)
@@ -70,20 +73,35 @@ zzz = [i['shape'] for i in map_data['response']['route']]
 
     
 def get_total_weights(coord_array, crime_data):
-    x = []
-    y = []
+   
     total_weights = 0
+    # for each route
     for i in range(len(coord_array)):
+        # for each coordinate
         for j in range(len(coord_array[i])):
             xy = coord_array[i][j].split(",")
-            x.append(float(xy[0]))
-            y.append(float(xy[1]))
+            
+            # for each coordinate, get all crimes within radius
+            x1 = np.repeat(float(xy[0]), len(crime_df))
+            y1 = np.repeat(float(xy[1]), len(crime_df))
+            
+#            x1 = np.asarray(crime_df['longitude'])
+            x2 = crime_df['longitude'].apply(lambda x: float(x))
+            y2 = crime_df['latitude'].apply(lambda x: float(x))
+            
+            # r is a list of distances (Euclidean) of crimes from this coordinate
+            r = (x1 - x2)**2 + (y1 - y2)**2
+            
+            
+#            
+
         
-    print(x)
+        
+        
+    return (r)
             
             
 
         
-    
-    
-get_total_weights(zzz, crime_df)
+        
+a = get_total_weights(zzz, crime_df)
