@@ -2,19 +2,21 @@
 <!-- <p>Welcome to {{title}}</p> -->
 {{# if currentUserId}}
 
-<div class="form-group">
-  <label for="start-point">From:</label>
-  <input type="text" name="start" class="form-control" id="start-point" readonly="readonly" value="Hyde Park, Chicago">
-</div>
+<form action="/mapdata" method="post">
+  <div class="form-group">
+    <label for="start-point">From:</label>
+    <input type="text" name="start" class="form-control" id="start-point" readonly="readonly" value="Hyde Park, Chicago">
+  </div>
 
-<div class="form-group">
-  <label for="end-point">To:</label>
-  <input type="text" name="end" class="form-control" id="end-point" placeholder="Ending Location">
-</div>
+  <div class="form-group">
+    <label for="end-point">To:</label>
+    <input type="text" name="end" class="form-control" id="end-point" placeholder="Ending Location">
+  </div>
 
-<div class="text-right">
-  <button type="submit" class="btn btn-primary">Submit</button>
-</div>
+  <div class="text-right">
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </div>
+</form>
 
 <div style="width: 640px; height: 480px" id="mapContainer"></div>
 
